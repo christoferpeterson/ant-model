@@ -318,18 +318,32 @@ to uphill-nest-scent  ;; dead-reckoning procedure that involves going towards th
 end
 
 to follow-trail-marker-path     ;; directs ant movement toward the pheromone trail
-  ifelse count foragers < 6    ;; at the beginning of recruitment, foragers random-walk
+  ifelse count foragers < 6 or (patch-left-and-ahead 30 1 = nobody) or (patch-right-and-ahead 30 1 = nobody)   ;; at the beginning of recruitment, foragers random-walk
   [wiggle]
+  [
+    let inFrontOfAnt total-trail-markers-in-cone 10 0 10;
+    let leftOfAnt total-trail-markers-in-cone 10 30 10;
+    let rightOfAnt total-trail-markers-in-cone 10 -30 10;
 
-  [ifelse any? trail-markers-on patch-ahead 1 [fd 1 right random 20 left random 20]
-    [ifelse (patch-left-and-ahead 30 1 = nobody) or (patch-right-and-ahead 30 1 = nobody)
-      [wiggle]
-      [if any? trail-markers-on patch-left-and-ahead 30 1 and (total-trail-markers-in-cone 10 -30 10 > total-trail-markers-in-cone 10 30 10)
-        [lt 30]
-      if (total-trail-markers-in-cone 10 30 10 > total-trail-markers-in-cone 10 -30 10) and any? trail-markers-on patch-right-and-ahead 30 1
-        [rt 30]
-        if total-trail-markers-in-cone 5 30 10 < 1 or total-trail-markers-in-cone 5 -30 10 < 1 [uphill-nest-scent]
-  ]]]
+    ifelse(inFrontOfAnt = 0 and leftOfAnt = 0 and rightOfAnt = 0)
+    [uphill-nest-scent]
+    [
+      ifelse(inFrontOfAnt > leftOfAnt and inFrontOfAnt > rightOfAnt)
+      [ ;; In front of the ant has more trail markers so go forward
+        wiggle
+        fd 1
+      ]
+      [
+        ifelse(leftOfAnt > rightOfAnt)
+        [ ;; Left of the ant has more trail markers so go left
+          rt 30;
+        ]
+        [ ;; Right of the ant has more trail markers so go right
+          rt -30;
+        ]
+      ]
+    ]
+  ]
 end
 
 to lay-pheromone [c]
@@ -337,7 +351,7 @@ to lay-pheromone [c]
   [
     set size 1.0
     set color c
-    set lifespan 700
+    set lifespan 300
   ]
 end
 
