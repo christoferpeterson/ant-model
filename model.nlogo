@@ -247,10 +247,12 @@ to lead  ;; leader procedure
 end
 
 to mass-recruit-leaders  ;; transition leaders to pheromone-following foragers
-  if (not any? followers with [color = brown]) and (near-nest) and mass-recruitment-delay = 0   ;; transforms leaders into foragers during mass-recruitment
-  [set breed foragers
+  if (not any? followers with [color = brown]) and (near-nest) and in-mass-recruitment-delay mass-recruitment-delay octopamine-level food-quality ;; transforms leaders into foragers during mass-recruitment
+  [
+    set breed foragers
     set color EXPLORING_FORAGER_COLOR
-    hatch-foragers 1]
+    hatch-foragers 1
+  ]
 end
 
 to follow-leaders  ;; follower procedure for group-recruitment
@@ -317,6 +319,16 @@ to uphill-nest-scent  ;; dead-reckoning procedure that involves going towards th
     [ lt 45 ] ]
 end
 
+
+to-report total-trail-markers-in-cone [cone-distance angle angle-width ] ; ant procedure - reports the total amount of trail-markers in cone
+  rt angle
+  let p count trail-markers in-cone cone-distance angle-width
+  ;ask p [ show chemical ]
+  lt angle
+  report (p)
+  if not any? p [report 0]
+end
+
 to follow-trail-marker-path     ;; directs ant movement toward the pheromone trail
   ifelse count foragers < 6 or (patch-left-and-ahead 30 1 = nobody) or (patch-right-and-ahead 30 1 = nobody)   ;; at the beginning of recruitment, foragers random-walk
   [wiggle]
@@ -330,7 +342,8 @@ to follow-trail-marker-path     ;; directs ant movement toward the pheromone tra
     [
       ifelse(inFrontOfAnt > leftOfAnt and inFrontOfAnt > rightOfAnt)
       [ ;; In front of the ant has more trail markers so go forward
-        wiggle
+        rt random 35
+        lt random 35
         fd 1
       ]
       [
@@ -441,15 +454,6 @@ to-report nest-scent-at-angle [angle]
   let p patch-right-and-ahead angle 1
   if p = nobody [ report 0 ]
   report [nest-scent] of p
-end
-
-to-report total-trail-markers-in-cone [cone-distance angle angle-width ] ; ant procedure - reports the total amount of trail-markers in cone
-  rt angle
-  let p count trail-markers in-cone cone-distance angle-width
-  ;ask p [ show chemical ]
-  lt angle
-  report (p)
-  if not any? p [report 0]
 end
 
 to-report leader-presence
